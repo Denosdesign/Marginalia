@@ -82,23 +82,27 @@ body:has(.active-review) main{padding-top:calc(16px + env(safe-area-inset-top))}
   .reader-bar{padding-top:env(safe-area-inset-top)}
   body:has(.reader-layout) main{padding-top:0}
 }
-.reader-head{max-width:none;margin:0;padding:20px 0 8px;border-color:var(--line);min-width:0}
-.reader-head h1{font-size:calc(clamp(27px,8.3vw,44px) + (var(--read) - 20px)*.75);line-height:1.17;letter-spacing:-.025em;margin:8px 0 0;overflow-wrap:anywhere;text-wrap:balance}
-.reader-head .reader-deck{font:calc(var(--read) - 4px)/1.5 var(--sans);margin:10px 0 12px;overflow-wrap:anywhere}
-.reader-tools{margin-top:12px;gap:4px 12px}
+.reader-head{max-width:none;margin:0;padding:20px 0 0;border-color:var(--line);min-width:0}
+.reader-head h1{font-size:calc(clamp(29px,8.5vw,46px) + (var(--read) - 20px)*.65);font-weight:700;line-height:1.13;letter-spacing:-.024em;margin:0;overflow-wrap:anywhere}
+.reader-head .reader-deck{font:calc(var(--read) - 4px)/1.5 var(--sans);margin:10px 0;color:var(--ink);overflow-wrap:anywhere}
+.reader-head .reader-meta{display:block;font-size:12px;line-height:1.5}
+.reader-meta span{display:inline-block}
+.reader-tools{margin-top:5px;gap:0 14px}
+.reader-tools :is(button,summary){font-size:14px}
+.reader-tools .reader-listen{font-weight:650}
+.reader-tools .reader-listen:before{content:"";display:inline-block;width:0;height:0;border-block:4px solid transparent;border-left:6px solid currentColor;margin-right:7px;vertical-align:1px}
 .reader-tools button,.reader-tools summary,.reader-shortcuts button,.reader-finish button{min-height:44px}
-#readerOptions summary{padding-block:10px}
+#readerOptions summary{padding-block:11px}
 #readerOptions[open]{flex:1 0 100%}
 .reader-options{background:var(--soft);padding:5px 12px 8px}
 .reader-option{font:14px var(--sans);color:var(--ink);display:flex;gap:12px;align-items:center;justify-content:space-between;margin:6px 0}
 .reader-option select{min-height:44px;font-size:16px}
-.reader-shortcuts{display:flex;gap:16px}
 #voiceStatus:empty{display:none}
 #voiceStatus{font-size:13px}
 .side{display:none}
-.reading{font-size:var(--read);line-height:1.65;min-width:0;padding-top:1.2em;overflow-anchor:none}
-.reading section + section{margin-top:1.65em}
-.reading h2{font-size:1.2em;line-height:1.24;letter-spacing:-.012em;margin:0 0 .4em;overflow-wrap:anywhere}
+.reading{font-size:var(--read);line-height:1.63;min-width:0;padding-top:1.05em;overflow-anchor:none}
+.reading section + section{margin-top:1.7em}
+.reading h2{font-family:var(--sans);font-size:.86em;font-weight:700;line-height:1.32;letter-spacing:0;margin:0 0 .45em;overflow-wrap:anywhere}
 .reading p{margin:0}
 .reading p + p{margin-top:.72em}
 .reader-bottom{margin-top:24px}
@@ -318,29 +322,29 @@ function reader() {
       </div>
     </div>
     <header class="reader-head">
-      <div class="meta">${E(lesson.category)} · ${minutes(lesson)} min · ${E(lesson.level)}</div>
       <h1>${E(lesson.title)}</h1>
       <p class="reader-deck">${E(lesson.description)}</p>
-      ${!lesson.verified?'<span class="meta">Learning adaptation · Source not independently verified</span>':''}
+      <div class="meta reader-meta">${E(lesson.category)} · ${minutes(lesson)} min · ${E(lesson.level)}${!lesson.verified?' · <span>Unverified adaptation</span>':''}</div>
       <div class="reader-tools">
-        ${button(speaking?'Pause':audio?'Resume':'Read aloud','speak','','primary')}
+        ${button(speaking?'Pause':audio?'Resume':'Read aloud','speak','','text reader-listen')}
         ${button('Stop','stop',audio?'':'hidden','quiet-action')}
+        <button class="text" data-act="jump" data-id="lessonLanguage">Vocabulary</button>
         <details id="readerOptions" data-disclosure="reader-options">
-          <summary>Reading options</summary>
+          <summary>Options</summary>
           <div class="reader-options">
             <label class="reader-option">Speech speed <select id="rate">${[0.7,0.85,1,1.15,1.3].map(x=>`<option value="${x}" ${setting('rate',1)===x?'selected':''}>${x}×</option>`).join('')}</select></label>
             ${button(progress.bookmarked?'Remove bookmark':'Save article','bookmark',attr('id',lesson.id),'text')}
+            ${highlights.length?button('Highlights ('+highlights.length+')','jump',attr('id','articleHighlights'),'text'):''}
           </div>
         </details>
       </div>
       <p class="notice" id="voiceStatus" aria-live="polite"></p>
-      <div class="reader-shortcuts"><button class="text" data-act="jump" data-id="lessonLanguage">Vocabulary</button>${highlights.length?`<button class="text" data-act="jump" data-id="articleHighlights">Highlights (${highlights.length})</button>`:''}</div>
     </header>
     <article class="reading" id="articleText">${lesson.sections.map(s=>`<section><h2 id="sec-${E(s.id)}">${E(s.heading)}</h2>${s.paragraphs.map((p,i)=>`<p data-section="${E(s.id)}" data-index="${i}">${annotated(lesson,s,i,p)}</p>`).join('')}</section>`).join('')}</article>
     <aside class="side" aria-label="Contents"><h2>In this article</h2>${lesson.sections.map(s=>button(E(s.heading),'jump',attr('id','sec-'+s.id),'text')).join('')}<button class="text" data-act="jump" data-id="lessonLanguage">Vocabulary & expressions</button></aside>
     <div class="reader-bottom">
       <div class="reader-finish">${button(progress.status==='complete'?'Mark as unread':'Mark as read','complete',attr('id',lesson.id),'text')}
-      <details data-disclosure="article-source"><summary>Article source</summary><p>${E(lesson.source)} · ${E(dateLabel(lesson.date))} · ${E(lesson.region)}</p>
+      <details data-disclosure="article-source"><summary>Article source</summary>${!lesson.verified?'<p>The source claims in this learning adaptation have not been independently verified.</p>':''}<p>${E(lesson.source)} · ${E(dateLabel(lesson.date))} · ${E(lesson.region)}</p>
         ${lesson.sourceUrl&&/^https?:\/\//i.test(lesson.sourceUrl)?`<a href="${E(lesson.sourceUrl)}" target="_blank" rel="noopener noreferrer">Original report</a>`:''}
       </details></div>
       ${highlights.length?`<details class="lesson-section" id="articleHighlights" data-disclosure="article-highlights"><summary>Highlights (${highlights.length})</summary>${highlights.map(h=>`<div class="quote">${E(h.text)}</div>${button('View highlight','highlightDetail',attr('id',h.id),'text')}`).join('')}</details>`:''}
